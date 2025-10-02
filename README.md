@@ -16,7 +16,3 @@ O sistema realiza:
 ## 🚀 Demonstração  
 🔗 Acesse o app: [Cultural Film Dashboard](https://ond36r3mk75n8wkjlrxsur.streamlit.app/)  
 
----
-
-## 📂 Estrutura do Projeto  
-
