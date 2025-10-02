@@ -1,28 +1,22 @@
-# 🎬 Análise Cultural de Filmes - Dashboard Interativo
+# 🎬 Análise Cultural de Filmes  
 
-Dashboard profissional para análise comparativa de sentimentos em reviews cinematográficos entre culturas oriental e ocidental.
+[![Streamlit Cloud](https://img.shields.io/badge/Streamlit-Live%20App-brightgreen?logo=streamlit)](https://ond36r3mk75n8wkjlrxsur.streamlit.app/)  
 
-## 🌟 Sobre o Projeto
+Este projeto apresenta um **dashboard interativo** desenvolvido em **Streamlit** para analisar e comparar a **expressão emocional em reviews de filmes ocidentais e orientais**.  
 
-Análise estatística robusta de padrões emocionais em reviews de filmes, utilizando Processamento de Linguagem Natural (NLP) e testes estatísticos avançados.
+O sistema realiza:  
+- 📊 **Análise de sentimentos** (positivos, negativos e neutros) com **TextBlob**  
+- 🎭 **Comparações culturais** (Ocidental vs Oriental)  
+- 📐 **Análises estatísticas robustas** (Mann-Whitney, Kruskal-Wallis, Cohen’s d)  
+- 📈 **Visualizações dinâmicas** com **Plotly** (barras, violino, ECDF, distribuições)  
+- 🎨 Interface moderna com tema escuro estilizado  
 
-## 🚀 Live Demo
+---
 
-**[🔗 Acesse o Dashboard Aqui](https://seunome-analise-cultural-filmes.streamlit.app](https://ond36r3mk75n8wkjlrxsur.streamlit.app/))**
+## 🚀 Demonstração  
+🔗 Acesse o app: [Cultural Film Dashboard](https://ond36r3mk75n8wkjlrxsur.streamlit.app/)  
 
-## 📊 Funcionalidades
+---
 
-- ✅ Análise comparativa Oriente vs Ocidente
-- ✅ Estatísticas robustas (Mann-Whitney, Cohen's d)
-- ✅ Visualizações interativas com Plotly
-- ✅ Design moderno com tema escuro
-- ✅ Download de dados analisados
+## 📂 Estrutura do Projeto  
 
-## 🛠 Tecnologias
-
-- **Python**: Streamlit, Pandas, Plotly, TextBlob
-- **Estatística**: Scipy, testes não-paramétricos
-- **NLP**: Análise de sentimentos e subjetividade
-- **Deploy**: Streamlit Cloud
-
-## 📁 Estrutura
