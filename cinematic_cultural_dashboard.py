@@ -4,17 +4,11 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from textblob import TextBlob
+import os
+from PIL import Image
 import scipy.stats as stats
 import numpy as np
 from scipy.stats import mannwhitneyu, kruskal
-import nltk
-
-# Download necessário para o TextBlob (apenas na primeira execução)
-try:
-    nltk.download('punkt')
-    nltk.download('averaged_perceptron_tagger')
-except:
-    pass
 
 # Configuração da página
 st.set_page_config(
@@ -230,129 +224,37 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_data
-def carregar_dados():
-    """Carrega e processa os dados - Versão otimizada para deploy"""
-    try:
-        # Tenta carregar o arquivo CSV
-        df = pd.read_csv('reviews_final.csv')
-        
-        # Verifica se as colunas necessárias existem
-        colunas_necessarias = ['review', 'region']
-        for coluna in colunas_necessarias:
-            if coluna not in df.columns:
-                st.error(f"Coluna '{coluna}' não encontrada no arquivo CSV")
-                return pd.DataFrame()
-        
-        # Traduzir regiões para português
-        df['region'] = df['region'].replace({'Western': 'Ocidental', 'Eastern': 'Oriental'})
-        
-        # Amostra para desenvolvimento mais rápido (remova em produção)
-        if len(df) > 1000:
-            df = df.sample(1000, random_state=42)
-        
-        # Análise de sentimentos otimizada
-        st.info("🔄 Analisando sentimentos... Isso pode levar alguns minutos.")
-        
-        # Processamento em lotes para melhor performance
-        batch_size = 100
-        sentiment_results = []
-        
-        for i in range(0, len(df), batch_size):
-            batch = df.iloc[i:i+batch_size]
-            batch_results = batch['review'].apply(analisar_sentimento_textblob)
-            sentiment_results.extend(batch_results)
-            
-            # Progresso
-            if i % 500 == 0:
-                st.write(f"📊 Processados {min(i + batch_size, len(df))}/{len(df)} reviews")
-        
-        # Adiciona resultados ao DataFrame
-        df['sentimento'] = [x[0] for x in sentiment_results]
-        df['subjetividade'] = [x[1] for x in sentiment_results]
-        df['categoria_sentimento'] = [x[2] for x in sentiment_results]
-        df['cor_sentimento'] = [x[3] for x in sentiment_results]
-        
-        return df
-        
-    except Exception as e:
-        st.error(f"Erro ao carregar dados: {str(e)}")
-        
-        # Retorna dados de exemplo para demonstração
-        st.info("📝 Usando dados de exemplo para demonstração...")
-        return criar_dados_exemplo()
+# Configurações
+IMAGES_PATH = r"C:\Users\bruno\Desktop\filmes\images"
 
-def criar_dados_exemplo():
-    """Cria dados de exemplo caso o CSV não seja encontrado"""
-    np.random.seed(42)
-    
-    filmes_orientais = [
-        'A Separação (2011)', 'Parasita (2019)', 'Rashomon (1950)', 
-        'A Viagem de Chihiro (2001)', 'Oldboy (2003)',
-        'Desejo e Perigo (2007)', 'Tigre e Dragão (2000)', 'A Bruxa de Blair (1999)',
-        'Memórias de um Assassino (2003)', 'A Flor do Mal (2010)'
-    ]
-    
-    filmes_ocidentais = [
-        'O Poderoso Chefão (1972)', 'Pulp Fiction (1994)', 'O Cavaleiro das Trevas (2008)',
-        'Forrest Gump (1994)', 'Clube da Luta (1999)', 'Interestelar (2014)',
-        'O Senhor dos Anéis (2001)', 'Matrix (1999)', 'Gladiador (2000)', 'Titanic (1997)'
-    ]
-    
-    dados = []
-    
-    # Gera dados com padrões culturais diferenciados
-    for filme in filmes_orientais + filmes_ocidentais:
-        regiao = 'Oriental' if filme in filmes_orientais else 'Ocidental'
+def carregar_imagem(nome_filme):
+    """Tenta carregar imagem do filme"""
+    try:
+        # Mapeamento direto para os arquivos que você tem
+        mapeamento = {
+            "After Yang (2021)": "After Yang.png",
+            "Archive (2020)": "Archive.png",
+            "Atlas (2024)": "Atlas.png", 
+            "Chappie (2015)": "Chappie.png",
+            "Ex Machina (2014)": "Ex Machina.png",
+            "Her (2013)": "Her.png",
+            "I, Robot (2004)": "I, Robot.png",
+            "The Creator (2023)": "The Creator.png",
+            "Transcendence (2014)": "Transcendence.png",
+            "A.I. Artificial Intelligence (2001)": "A.I. Artificial Intelligence.png"
+        }
         
-        # Padrões diferentes por região
-        if regiao == 'Ocidental':
-            # Ocidental: mais extremos, maior variância
-            n_reviews = np.random.randint(80, 150)
-            base_sentimento = np.random.normal(0.6, 0.3, n_reviews)
-        else:
-            # Oriental: mais equilibrado, menor variância
-            n_reviews = np.random.randint(70, 130)
-            base_sentimento = np.random.normal(0.55, 0.2, n_reviews)
-        
-        for i in range(n_reviews):
-            # Ajusta distribuição baseado na região
-            if regiao == 'Ocidental':
-                sentimento_val = np.clip(base_sentimento[i] + np.random.normal(0, 0.1), -1, 1)
-            else:
-                sentimento_val = np.clip(base_sentimento[i] + np.random.normal(0, 0.05), -1, 1)
-            
-            # Categoriza sentimento
-            if sentimento_val > 0.3:
-                categoria = "Muito Positivo"
-                cor = "#27ae60"
-            elif sentimento_val > 0.1:
-                categoria = "Positivo" 
-                cor = "#2ecc71"
-            elif sentimento_val > -0.1:
-                categoria = "Neutro"
-                cor = "#f39c12"
-            elif sentimento_val > -0.3:
-                categoria = "Negativo"
-                cor = "#e74c3c"
-            else:
-                categoria = "Muito Negativo"
-                cor = "#c0392b"
-            
-            dados.append({
-                'title': filme,
-                'region': regiao,
-                'review': f"Review exemplo para {filme} - {categoria}",
-                'sentimento': sentimento_val,
-                'subjetividade': np.random.uniform(0.3, 0.9),
-                'categoria_sentimento': categoria,
-                'cor_sentimento': cor
-            })
-    
-    return pd.DataFrame(dados)
+        if nome_filme in mapeamento:
+            caminho = os.path.join(IMAGES_PATH, mapeamento[nome_filme])
+            if os.path.exists(caminho):
+                imagem = Image.open(caminho)
+                return imagem.resize((150, 225))
+    except:
+        pass
+    return None
 
 def analisar_sentimento_textblob(texto):
-    """Análise de sentimentos detalhada - versão otimizada"""
+    """Análise de sentimentos detalhada"""
     try:
         analysis = TextBlob(str(texto))
         polaridade = analysis.sentiment.polarity
@@ -378,6 +280,27 @@ def analisar_sentimento_textblob(texto):
         return polaridade, subjetividade, categoria, cor
     except:
         return 0, 0, "Neutro", "#f39c12"
+
+@st.cache_data
+def carregar_dados():
+    """Carrega e processa os dados"""
+    try:
+        df = pd.read_csv('reviews_final.csv', encoding='utf-8-sig')
+        
+        # Traduzir regiões para português
+        df['region'] = df['region'].replace({'Western': 'Ocidental', 'Eastern': 'Oriental'})
+        
+        # Análise de sentimentos detalhada
+        sentiment_results = df['review'].apply(analisar_sentimento_textblob)
+        df['sentimento'] = sentiment_results.apply(lambda x: x[0])
+        df['subjetividade'] = sentiment_results.apply(lambda x: x[1])
+        df['categoria_sentimento'] = sentiment_results.apply(lambda x: x[2])
+        df['cor_sentimento'] = sentiment_results.apply(lambda x: x[3])
+        
+        return df
+    except Exception as e:
+        st.error(f"Erro ao carregar dados: {e}")
+        return pd.DataFrame()
 
 def analise_estatistica_adequada(df_ocidental, df_oriental):
     """
@@ -460,12 +383,12 @@ def criar_analise_estatistica_detalhada(analise):
         <div class="metric-card stat-card">
             <div class="metric-label">📊 MANN-WHITNEY</div>
             <div style="font-size: 1.2rem; font-weight: 700; color: #9b59b6; margin: 0.5rem 0;">
-                U = {resultados['mann_whitney']['stat']:.1f if resultados['mann_whitney']['stat'] else 'N/A'}
+                U = {resultados['mann_whitney']['stat']:.1f}
             </div>
             <div style="color: #b0b0b0; font-size: 0.9rem;">
-                Valor p: {p_mw:.4f if p_mw else 'N/A'}<br>
-                <span style="color: {'#2ecc71' if p_mw and p_mw < 0.05 else '#e74c3c'}; font-weight: 600;">
-                    {'✅ SIGNIFICATIVO' if p_mw and p_mw < 0.05 else '❌ NÃO SIGNIFICATIVO'}
+                Valor p: {p_mw:.4f}<br>
+                <span style="color: {'#2ecc71' if p_mw < 0.05 else '#e74c3c'}; font-weight: 600;">
+                    {'✅ SIGNIFICATIVO' if p_mw < 0.05 else '❌ NÃO SIGNIFICATIVO'}
                 </span>
             </div>
         </div>
@@ -479,11 +402,11 @@ def criar_analise_estatistica_detalhada(analise):
         <div class="metric-card stat-card">
             <div class="metric-label">📏 TAMANHO DO EFEITO</div>
             <div style="font-size: 1.4rem; font-weight: 700; color: #3498db; margin: 0.5rem 0;">
-                d = {cohens_d:.3f if cohens_d else 'N/A'}
+                d = {cohens_d:.3f}
             </div>
             <div style="color: #b0b0b0; font-size: 0.9rem;">
                 Magnitude: {magnitude}<br>
-                Direção: {'Ocidental > Oriental' if cohens_d and cohens_d > 0 else 'Oriental > Ocidental' if cohens_d else 'N/A'}
+                Direção: {'Ocidental > Oriental' if cohens_d > 0 else 'Oriental > Ocidental'}
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -718,7 +641,13 @@ def main():
         df = carregar_dados()
     
     if df.empty:
-        st.error("❌ Não foi possível carregar os dados!")
+        st.error("❌ Arquivo 'reviews_final.csv' não encontrado!")
+        st.info("""
+        **Para resolver:**
+        1. Verifique se o arquivo está na mesma pasta do script
+        2. Confirme o nome exato do arquivo
+        3. Verifique a formatação do CSV
+        """)
         return
     
     # Análise comparativa
@@ -748,17 +677,6 @@ def main():
             st.metric("Significância", 
                      "✅" if p_valor and p_valor < 0.05 else "❌",
                      f"p = {p_valor:.4f}" if p_valor else "N/A")
-        
-        # Botão de download
-        st.markdown("---")
-        st.markdown("### 📥 EXPORTAR DADOS")
-        csv = df.to_csv(index=False)
-        st.download_button(
-            label="📊 Baixar CSV Completo",
-            data=csv,
-            file_name="dados_analise_cultural.csv",
-            mime="text/csv"
-        )
     
     if opcao == "Visão Geral Comparativa":
         st.markdown("## 🌍 ANÁLISE COMPARATIVA DETALHADA")
