@@ -659,7 +659,7 @@ def main():
         
         opcao = st.radio(
             "Selecione a análise:",
-            ["Visão Geral Comparativa", "Análise por Cultura", "Metodologia"],
+            ["Visão Geral", "Análise por Cultura", "Metodologia"],
             index=0
         )
         
@@ -954,3 +954,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
