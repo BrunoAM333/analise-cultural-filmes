@@ -8,7 +8,7 @@ Análise estatística robusta de padrões emocionais em reviews de filmes, utili
 
 ## 🚀 Live Demo
 
-**[🔗 Acesse o Dashboard Aqui]([https://seunome-analise-cultural-filmes.streamlit.app](https://ond36r3mk75n8wkjlrxsur.streamlit.app/))**
+**[🔗 Acesse o Dashboard Aqui](https://seunome-analise-cultural-filmes.streamlit.app](https://ond36r3mk75n8wkjlrxsur.streamlit.app/))**
 
 ## 📊 Funcionalidades
 
